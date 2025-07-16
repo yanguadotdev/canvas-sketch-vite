@@ -12,5 +12,5 @@ body {
 
 canvas {
   border: 1px solid rgba(34, 34, 34, 0.15);
-  border-radius: .5rem;
+  border-radius: .25rem;
 }
