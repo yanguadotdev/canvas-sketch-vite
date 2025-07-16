@@ -14,6 +14,10 @@ const params = {
   scaleMax: 30,
   frequency: 0.001,
   amplitude: 0.2,
+  animate: true,
+  frame: 0,
+  speed: 15,
+  lineCap: 'butt',
 }
 
 const sketch = () => {
@@ -40,7 +44,8 @@ const sketch = () => {
       const w = cellw * 0.8
       const h = cellh * 0.8
 
-      const n = random.noise2D(x + frame * 15, y, params.frequency) // returns a number bettween -1 and 1
+      const f = params.animate ? frame : params.frame
+      const n = random.noise3D(x, y, f * params.speed, params.frequency) // returns a number bettween -1 and 1
       const angle = n * Math.PI * params.amplitude // we get the equivalent -180 and 180 degrees
 
       // const scale = (n + 1) / 2 * 30
@@ -53,6 +58,7 @@ const sketch = () => {
       context.rotate(angle)
 
       context.lineWidth = scale
+      context.lineCap = params.lineCap
 
       context.beginPath()
       context.moveTo(w * -0.5, 0)
@@ -68,6 +74,13 @@ const createPane = () => {
   const pane = new Pane({ title: 'Parameters' })
 
   const f1 = pane.addFolder({ title: 'Grid' })
+  f1.addBinding(params, 'lineCap', {
+    options: {
+      butt: 'butt',
+      round: 'round',
+      square: 'square',
+    },
+  })
   f1.addBinding(params, 'cols', { min: 2, max: 50, step: 1 })
   f1.addBinding(params, 'rows', { min: 2, max: 50, step: 1 })
 
@@ -78,6 +91,11 @@ const createPane = () => {
   const f3 = pane.addFolder({ title: 'Noise' })
   f3.addBinding(params, 'frequency', { min: -0.01, max: 0.01 })
   f3.addBinding(params, 'amplitude', { min: 0, max: 1 })
+
+  const f4 = pane.addFolder({ title: 'Animation' })
+  f4.addBinding(params, 'animate')
+  f4.addBinding(params, 'frame', { min: 0, max: 999, step: 1 })
+  f4.addBinding(params, 'speed', { min: 10, max: 100, step: 1 })
 }
 
 createPane()
