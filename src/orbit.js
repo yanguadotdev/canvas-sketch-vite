@@ -12,7 +12,7 @@ const params = {
   lonSteps: 60,
   rotationSpeed: 0.005,
   fov: 1500,
-  pointSize: .8,
+  pointSize: 0.8,
   mouseRadius: 100,
   force: 75,
 }
@@ -64,14 +64,21 @@ const sketch = () => {
       let py = y * scale
       const size = scale * params.pointSize
 
-      // Aplicar repulsión si el mouse 
+      // Apply mouse repulsion if the mouse is close to the point
       const dx = px - (mouse.x - width / 2)
       const dy = py - (mouse.y - height / 2)
       const dist = Math.sqrt(dx * dx + dy * dy)
 
+      // Calculate color based on distance
+      const t = math.clamp(1 - dist / params.mouseRadius, 0, 1)
+      const r = math.lerp(0, 255, t)
+      const g = math.lerp(100, 50, t)
+      const b = math.lerp(255, 0, t)
+      context.fillStyle = `rgb(${r}, ${g}, ${b})`
+
+      // Repulsion
       if (dist < params.mouseRadius) {
-        const force =
-          (1 - dist / params.mouseRadius) * params.force
+        const force = (1 - dist / params.mouseRadius) * params.force
         const angleAway = Math.atan2(dy, dx)
         px += Math.cos(angleAway) * force
         py += Math.sin(angleAway) * force
