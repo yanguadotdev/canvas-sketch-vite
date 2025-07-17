@@ -15,6 +15,8 @@ const params = {
   pointSize: 0.8,
   mouseRadius: 100,
   force: 75,
+  baseColor: '#ffffff',
+  nearColor: '#00ffff',
 }
 
 let points = []
@@ -70,11 +72,15 @@ const sketch = () => {
       const dist = Math.sqrt(dx * dx + dy * dy)
 
       // Calculate color based on distance
-      const t = math.clamp(1 - dist / params.mouseRadius, 0, 1)
-      const r = math.lerp(0, 255, t)
-      const g = math.lerp(100, 50, t)
-      const b = math.lerp(255, 0, t)
-      context.fillStyle = `rgb(${r}, ${g}, ${b})`
+      //   const t = math.clamp(1 - dist / params.mouseRadius, 0, 1)
+      //   const r = math.lerp(0, 255, t)
+      //   const g = math.lerp(100, 50, t)
+      //   const b = math.lerp(255, 0, t)
+      //   context.fillStyle = `rgb(${r}, ${g}, ${b})`
+
+      const color =
+        dist < params.mouseRadius ? params.nearColor : params.baseColor
+      context.fillStyle = color
 
       // Repulsion
       if (dist < params.mouseRadius) {
@@ -125,6 +131,10 @@ const createPane = () => {
   const f3 = pane.addFolder({ title: 'Mouse Repulsion' })
   f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1 })
   f3.addBinding(params, 'force', { min: 0, max: 200, step: 1 })
+
+  const f4 = pane.addFolder({ title: 'Colors' })
+  f4.addBinding(params, 'baseColor', { label: 'Far Color' })
+  f4.addBinding(params, 'nearColor', { label: 'Near Color' })
 }
 
 createPane()
