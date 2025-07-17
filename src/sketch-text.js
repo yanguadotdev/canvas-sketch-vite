@@ -101,7 +101,7 @@ const getGlyph = (v) => {
   if (v < 150) return '-'
   if (v < 200) return '+'
 
-  const glyphs = '_= /'.split('')
+  const glyphs = '_= /\\'.split('')
 
   return random.pick(glyphs)
 }
