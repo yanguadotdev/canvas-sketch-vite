@@ -1,10 +1,9 @@
-// orbit.js
 import canvasSketch from 'canvas-sketch'
 import math from 'canvas-sketch-util/math'
 
 const settings = {
   dimensions: [1080, 1080],
-  animate: false,
+  animate: true,
   fps: 60,
 }
 
@@ -15,12 +14,12 @@ const sketch = () => {
   const latSteps = 60
   const lonSteps = 60
 
-  // Generamos puntos en la esfera
+  // Generate points on the sphere
   for (let i = 0; i < latSteps; i++) {
     const theta = math.mapRange(i, 0, latSteps - 1, 0, Math.PI) // latitud
 
     for (let j = 0; j < lonSteps; j++) {
-      const phi = math.mapRange(j, 0, lonSteps - 1, 0, Math.PI * 2) // longitud
+      const phi = math.mapRange(j, 0, lonSteps - 1, 0, Math.PI * 2) // longitude
 
       const x = radius * Math.sin(theta) * Math.cos(phi)
       const y = radius * Math.cos(theta)
@@ -30,7 +29,7 @@ const sketch = () => {
     }
   }
 
-  return ({ context, width, height }) => {
+  return ({ context, width, height, frame }) => {
     context.fillStyle = 'black'
     context.fillRect(0, 0, width, height)
 
@@ -39,11 +38,19 @@ const sketch = () => {
 
     context.fillStyle = 'white'
 
+    const angle = frame * 0.001 // rotation speed
+
     for (const p of points) {
-      // Ignoramos z por ahora (proyección plana)
-      const scale = 1 // sin escala por perspectiva aún
-      const px = p.x * scale
-      const py = p.y * scale
+      // Rotation on Y axis
+      const cos = Math.cos(angle)
+      const sin = Math.sin(angle)
+      const x = p.x * cos - p.z * sin
+      const z = p.x * sin + p.z * cos
+      const y = p.y
+
+      // 2D projection without perspective
+      const px = x
+      const py = y
 
       context.beginPath()
       context.arc(px, py, 2, 0, Math.PI * 2)
