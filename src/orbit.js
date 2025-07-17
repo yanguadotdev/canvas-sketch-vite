@@ -17,6 +17,7 @@ const params = {
   force: 75,
   baseColor: '#ffffff',
   nearColor: '#00ffff',
+  rotationAxis: 'y', // 'x' or 'y'
 }
 
 let points = []
@@ -52,37 +53,40 @@ const sketch = () => {
     context.save()
     context.translate(width / 2, height / 2)
 
-    context.fillStyle = 'white'
-
     for (const p of points) {
+      let x = p.x
+      let y = p.y
+      let z = p.z
+
       const cos = Math.cos(angle)
       const sin = Math.sin(angle)
-      const x = p.x * cos - p.z * sin
-      const z = p.x * sin + p.z * cos
-      const y = p.y
+
+      // Rotación condicional
+      if (params.rotationAxis === 'y') {
+        const newX = x * cos - z * sin
+        const newZ = x * sin + z * cos
+        x = newX
+        z = newZ
+      } else if (params.rotationAxis === 'x') {
+        const newY = y * cos - z * sin
+        const newZ = y * sin + z * cos
+        y = newY
+        z = newZ
+      }
 
       const scale = fov / (fov + z)
       let px = x * scale
       let py = y * scale
       const size = scale * params.pointSize
 
-      // Apply mouse repulsion if the mouse is close to the point
       const dx = px - (mouse.x - width / 2)
       const dy = py - (mouse.y - height / 2)
       const dist = Math.sqrt(dx * dx + dy * dy)
-
-      // Calculate color based on distance
-      //   const t = math.clamp(1 - dist / params.mouseRadius, 0, 1)
-      //   const r = math.lerp(0, 255, t)
-      //   const g = math.lerp(100, 50, t)
-      //   const b = math.lerp(255, 0, t)
-      //   context.fillStyle = `rgb(${r}, ${g}, ${b})`
 
       const color =
         dist < params.mouseRadius ? params.nearColor : params.baseColor
       context.fillStyle = color
 
-      // Repulsion
       if (dist < params.mouseRadius) {
         const force = (1 - dist / params.mouseRadius) * params.force
         const angleAway = Math.atan2(dy, dx)
@@ -125,11 +129,15 @@ const createPane = () => {
 
   const f2 = pane.addFolder({ title: 'Projection' })
   f2.addBinding(params, 'fov', { min: 100, max: 2000, step: 10 })
-  f2.addBinding(params, 'rotationSpeed', { min: 0.001, max: 0.05, step: 0.001 })
+  f2.addBinding(params, 'rotationSpeed', { min: 0.001, max: 0.05, step: 0.001, label: 'speed' })
   f2.addBinding(params, 'pointSize', { min: 0.4, max: 3, step: 0.1 })
+  f2.addBinding(params, 'rotationAxis', {
+    options: { y: 'y', x: 'x' },
+    label: 'Rotation Axis',
+  })
 
   const f3 = pane.addFolder({ title: 'Mouse Repulsion' })
-  f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1 })
+  f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1, label: 'radius' })
   f3.addBinding(params, 'force', { min: 0, max: 200, step: 1 })
 
   const f4 = pane.addFolder({ title: 'Colors' })
