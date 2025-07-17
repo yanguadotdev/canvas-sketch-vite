@@ -9,8 +9,3 @@ body {
   place-content: center;
   min-height: 100dvh;
 }
-
-canvas {
-  border: 1px solid rgba(34, 34, 34, 0.15);
-  border-radius: .25rem;
-}

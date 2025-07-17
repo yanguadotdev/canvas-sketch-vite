@@ -1,10 +1,8 @@
-// orbit.js
 import canvasSketch from 'canvas-sketch'
 import math from 'canvas-sketch-util/math'
 import { Pane } from 'tweakpane'
 
 const settings = {
-  dimensions: [1080, 1080],
   animate: true,
 }
 
@@ -13,8 +11,8 @@ const params = {
   latSteps: 60,
   lonSteps: 60,
   rotationSpeed: 0.005,
-  fov: 1000,
-  pointSize: 1.5,
+  fov: 1500,
+  pointSize: .8,
   mouseRadius: 100,
   force: 75,
 }
@@ -115,7 +113,7 @@ const createPane = () => {
   const f2 = pane.addFolder({ title: 'Projection' })
   f2.addBinding(params, 'fov', { min: 100, max: 2000, step: 10 })
   f2.addBinding(params, 'rotationSpeed', { min: 0.001, max: 0.05, step: 0.001 })
-  f2.addBinding(params, 'pointSize', { min: 0.1, max: 5, step: 0.1 })
+  f2.addBinding(params, 'pointSize', { min: 0.4, max: 3, step: 0.1 })
 
   const f3 = pane.addFolder({ title: 'Mouse Repulsion' })
   f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1 })
