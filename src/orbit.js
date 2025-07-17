@@ -15,9 +15,12 @@ const params = {
   rotationSpeed: 0.005,
   fov: 1000,
   pointSize: 1.5,
+  mouseRadius: 100,
+  force: 75,
 }
 
 let points = []
+let mouse = { x: 0, y: 0 }
 
 const generatePoints = () => {
   points = []
@@ -43,13 +46,13 @@ const sketch = () => {
     context.fillStyle = 'black'
     context.fillRect(0, 0, width, height)
 
+    const angle = frame * params.rotationSpeed
+    const fov = params.fov
+
     context.save()
     context.translate(width / 2, height / 2)
 
     context.fillStyle = 'white'
-
-    const angle = frame * params.rotationSpeed
-    const fov = params.fov
 
     for (const p of points) {
       const cos = Math.cos(angle)
@@ -59,10 +62,22 @@ const sketch = () => {
       const y = p.y
 
       const scale = fov / (fov + z)
-      const px = x * scale
-      const py = y * scale
-
+      let px = x * scale
+      let py = y * scale
       const size = scale * params.pointSize
+
+      // Aplicar repulsión si el mouse 
+      const dx = px - (mouse.x - width / 2)
+      const dy = py - (mouse.y - height / 2)
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist < params.mouseRadius) {
+        const force =
+          (1 - dist / params.mouseRadius) * params.force
+        const angleAway = Math.atan2(dy, dx)
+        px += Math.cos(angleAway) * force
+        py += Math.sin(angleAway) * force
+      }
 
       context.beginPath()
       context.arc(px, py, size, 0, Math.PI * 2)
@@ -75,25 +90,36 @@ const sketch = () => {
 
 canvasSketch(sketch, settings)
 
+window.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX
+  mouse.y = e.clientY
+})
+
 const createPane = () => {
   const pane = new Pane({ title: 'Parameters' })
 
-  pane
-    .addBinding(params, 'radius', { min: 50, max: 500, step: 1 })
-    .on('change', generatePoints)
-  pane
-    .addBinding(params, 'latSteps', { min: 10, max: 200, step: 1 })
-    .on('change', generatePoints)
-  pane
-    .addBinding(params, 'lonSteps', { min: 10, max: 200, step: 1 })
-    .on('change', generatePoints)
-  pane.addBinding(params, 'rotationSpeed', {
-    min: 0.001,
-    max: 0.05,
-    step: 0.001,
-  })
-  pane.addBinding(params, 'fov', { min: 400, max: 2000, step: 10 })
-  pane.addBinding(params, 'pointSize', { min: 0.1, max: 5, step: 0.1 })
+  const f1 = pane.addFolder({ title: 'Sphere' })
+  f1.addBinding(params, 'radius', { min: 50, max: 500, step: 1 }).on(
+    'change',
+    generatePoints
+  )
+  f1.addBinding(params, 'latSteps', { min: 10, max: 200, step: 1 }).on(
+    'change',
+    generatePoints
+  )
+  f1.addBinding(params, 'lonSteps', { min: 10, max: 200, step: 1 }).on(
+    'change',
+    generatePoints
+  )
+
+  const f2 = pane.addFolder({ title: 'Projection' })
+  f2.addBinding(params, 'fov', { min: 100, max: 2000, step: 10 })
+  f2.addBinding(params, 'rotationSpeed', { min: 0.001, max: 0.05, step: 0.001 })
+  f2.addBinding(params, 'pointSize', { min: 0.1, max: 5, step: 0.1 })
+
+  const f3 = pane.addFolder({ title: 'Mouse Repulsion' })
+  f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1 })
+  f3.addBinding(params, 'force', { min: 0, max: 200, step: 1 })
 }
 
 createPane()
