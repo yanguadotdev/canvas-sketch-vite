@@ -1,6 +1,11 @@
 import canvasSketch from 'canvas-sketch'
 import { Pane } from 'tweakpane'
 
+const FUNCTIONS_INTERPOLATION = {
+  easeInOutQuad: 'easeInOutQuad',
+  lerp: 'lerp',
+}
+
 // Utilities functions
 function getDistance(x1, y1, x2, y2) {
   const dx = x1 - x2
@@ -17,6 +22,10 @@ function easeInOutQuad(targetX, targetY, currentX, currentY, easing) {
   const newX = (targetX - currentX) * easing
   const newY = (targetY - currentY) * easing
   return { newX, newY }
+}
+
+function lerp(start, end, t) {
+  return start + (end - start) * t
 }
 
 function applyRepulsion(dx, dy, dist, repulsionRadius, repulsionStrength) {
@@ -54,6 +63,7 @@ const params = {
   repulsionRadius: 80,
   repulsionStrength: 30,
   easing: 0.1,
+  interpolation: FUNCTIONS_INTERPOLATION.easeInOutQuad,
 }
 
 let mouse = { x: -9999, y: -9999 }
@@ -98,7 +108,7 @@ const sketch = () => {
         nx = offsetX
         ny = offsetY
       } else {
-        // Lerp back to original position
+        // back to original position
         const { newX, newY } = easeInOutQuad(
           p.x0,
           p.y0,
@@ -110,8 +120,13 @@ const sketch = () => {
         ny = newY
       }
 
-      p.x += nx
-      p.y += ny
+      if (params.interpolation === FUNCTIONS_INTERPOLATION.easeInOutQuad) {
+        p.x += nx
+        p.y += ny
+      } else {
+        p.x = lerp(p.x, p.x + nx, params.easing)
+        p.y = lerp(p.y, p.y + ny, params.easing)
+      }
 
       if (params.shape === 'rect') {
         drawRect(context, p.x, p.y, params.pointSize)
@@ -139,6 +154,12 @@ function createPane() {
   pane.addBinding(params, 'shape', {
     options: { rect: 'rect', circle: 'circle', both: 'both' },
     label: 'shape',
+  })
+
+  const f2 = pane.addFolder({ title: 'Linear Interpolation' })
+  f2.addBinding(params, 'interpolation', {
+    options: FUNCTIONS_INTERPOLATION,
+    label: 'function',
   })
 }
 
