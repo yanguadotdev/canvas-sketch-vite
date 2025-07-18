@@ -11,65 +11,78 @@ const params = {
   pointSize: 12,
   color: '#ffffff',
   shape: 'both',
-  repulsionRadius: 60,
+  repulsionRadius: 80,
   repulsionStrength: 30,
+  easing: 0.1,
 }
 
 let mouse = { x: -9999, y: -9999 }
+let points = []
 
 const sketch = () => {
   return ({ context, width, height }) => {
+    // Initialize points only once
+    if (points.length === 0) {
+      const cols = Math.floor(params.size / params.spacing)
+      const rows = cols
+      const startX = width / 2 - params.size / 2
+      const startY = height / 2 - params.size / 2
+
+      for (let i = 0; i <= cols; i++) {
+        for (let j = 0; j <= rows; j++) {
+          const x0 = startX + i * params.spacing
+          const y0 = startY + j * params.spacing
+          points.push({ x0, y0, x: x0, y: y0 })
+        }
+      }
+    }
+
     context.fillStyle = 'black'
     context.fillRect(0, 0, width, height)
 
-    const cols = Math.floor(params.size / params.spacing)
-    const rows = cols
-    const startX = width / 2 - params.size / 2
-    const startY = height / 2 - params.size / 2
-
     context.strokeStyle = params.color
 
-    for (let i = 0; i <= cols; i++) {
-      for (let j = 0; j <= rows; j++) {
-        let x = startX + i * params.spacing
-        let y = startY + j * params.spacing
+    for (const p of points) {
+      const dx = p.x - mouse.x
+      const dy = p.y - mouse.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
 
-        const dx = x - mouse.x
-        const dy = y - mouse.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+      if (distance < params.repulsionRadius && distance > 0.01) {
+        const force =
+          (params.repulsionRadius - distance) / params.repulsionRadius
+        const nx = dx / distance
+        const ny = dy / distance
+        const offsetX = nx * force * params.repulsionStrength
+        const offsetY = ny * force * params.repulsionStrength
 
-        if (distance < params.repulsionRadius && distance > 0.01) {
-          const force = (params.repulsionRadius - distance) / params.repulsionRadius
-          const nx = dx / distance
-          const ny = dy / distance
-          const offsetX = nx * force * params.repulsionStrength
-          const offsetY = ny * force * params.repulsionStrength
-          x += offsetX
-          y += offsetY
-        }
-
-        context.beginPath()
-        if (params.shape === 'rect') {
-          context.rect(
-            x - params.pointSize / 2,
-            y - params.pointSize / 2,
-            params.pointSize,
-            params.pointSize
-          )
-        } else if (params.shape === 'circle') {
-          context.arc(x, y, params.pointSize / 2, 0, Math.PI * 2)
-        } else if (params.shape === 'both') {
-          context.arc(x, y, params.pointSize / 4, 0, Math.PI * 2)
-          context.rect(
-            x - params.pointSize / 2,
-            y - params.pointSize / 2,
-            params.pointSize,
-            params.pointSize
-          )
-        }
-
-        context.stroke()
+        p.x += offsetX
+        p.y += offsetY
+      } else {
+        // Lerp back to original position
+        p.x += (p.x0 - p.x) * params.easing
+        p.y += (p.y0 - p.y) * params.easing
       }
+
+      context.beginPath()
+      if (params.shape === 'rect') {
+        context.rect(
+          p.x - params.pointSize / 2,
+          p.y - params.pointSize / 2,
+          params.pointSize,
+          params.pointSize
+        )
+      } else if (params.shape === 'circle') {
+        context.arc(p.x, p.y, params.pointSize / 2, 0, Math.PI * 2)
+      } else if (params.shape === 'both') {
+        context.arc(p.x, p.y, params.pointSize / 4, 0, Math.PI * 2)
+        context.rect(
+          p.x - params.pointSize / 2,
+          p.y - params.pointSize / 2,
+          params.pointSize,
+          params.pointSize
+        )
+      }
+      context.stroke()
     }
   }
 }
@@ -83,6 +96,7 @@ function createPane() {
   pane.addBinding(params, 'pointSize', { min: 1, max: 20, step: 0.5 })
   pane.addBinding(params, 'repulsionRadius', { min: 10, max: 200, step: 1 })
   pane.addBinding(params, 'repulsionStrength', { min: 1, max: 100, step: 1 })
+  pane.addBinding(params, 'easing', { min: 0.01, max: 0.5, step: 0.01 })
   pane.addBinding(params, 'color')
   pane.addBinding(params, 'shape', {
     options: { rect: 'rect', circle: 'circle', both: 'both' },
