@@ -95,9 +95,9 @@ const sketch = () => {
     for (const p of points) {
       const { dx, dy, dist } = getDistance(p.x, p.y, mouse.x, mouse.y)
 
-      let nx, ny
-      // Apply repulsion
-      if (dist < params.repulsionRadius && dist > 0.01) {
+      const inRepulsion = dist < params.repulsionRadius && dist > 0.01
+
+      if (inRepulsion) {
         const { offsetX, offsetY } = applyRepulsion(
           dx,
           dy,
@@ -105,27 +105,24 @@ const sketch = () => {
           params.repulsionRadius,
           params.repulsionStrength
         )
-        nx = offsetX
-        ny = offsetY
+        p.x += offsetX
+        p.y += offsetY
       } else {
-        // back to original position
-        const { newX, newY } = easeInOutQuad(
-          p.x0,
-          p.y0,
-          p.x,
-          p.y,
-          params.easing
-        )
-        nx = newX
-        ny = newY
-      }
-
-      if (params.interpolation === FUNCTIONS_INTERPOLATION.easeInOutQuad) {
-        p.x += nx
-        p.y += ny
-      } else {
-        p.x = lerp(p.x, p.x + nx, params.easing)
-        p.y = lerp(p.y, p.y + ny, params.easing)
+        // Go back easing to original position
+        if (params.interpolation === FUNCTIONS_INTERPOLATION.easeInOutQuad) {
+          const { newX, newY } = easeInOutQuad(
+            p.x0,
+            p.y0,
+            p.x,
+            p.y,
+            params.easing
+          )
+          p.x += newX
+          p.y += newY
+        } else {
+          p.x = lerp(p.x, p.x0, params.easing)
+          p.y = lerp(p.y, p.y0, params.easing)
+        }
       }
 
       if (params.shape === 'rect') {
@@ -144,7 +141,11 @@ canvasSketch(sketch, settings)
 
 function createPane() {
   const pane = new Pane({ title: 'Parameters' })
-  pane.addBinding(params, 'size', { min: 100, max: 1000, step: 10 })
+  pane
+    .addBinding(params, 'size', { min: 100, max: 1000, step: 10 })
+    .on('change', () => {
+      points = []
+    })
   pane.addBinding(params, 'spacing', { min: 5, max: 100, step: 1 })
   pane.addBinding(params, 'pointSize', { min: 1, max: 20, step: 0.5 })
   pane.addBinding(params, 'repulsionRadius', { min: 10, max: 200, step: 1 })
