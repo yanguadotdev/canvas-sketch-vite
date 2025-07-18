@@ -147,30 +147,48 @@ canvasSketch(sketch, settings)
 
 function createPane() {
   const pane = new Pane({ title: 'Parameters' })
-  pane
+
+  // Grid controls
+  const fGrid = pane.addFolder({ title: 'Grid' })
+  fGrid
     .addBinding(params, 'size', { min: 100, max: 1000, step: 10 })
-    .on('change', () => {
-      points = []
-    })
-  pane.addBinding(params, 'spacing', { min: 5, max: 100, step: 1 })
-  pane.addBinding(params, 'pointSize', { min: 1, max: 20, step: 0.5 })
-  pane.addBinding(params, 'repulsionRadius', { min: 10, max: 200, step: 1 })
-  pane.addBinding(params, 'repulsionStrength', { min: 1, max: 100, step: 1 })
-  pane.addBinding(params, 'easing', { min: 0.01, max: 0.5, step: 0.01 })
-  pane.addBinding(params, 'color')
+    .on('change', () => (points = []))
+  fGrid
+    .addBinding(params, 'spacing', { min: 5, max: 100, step: 1 })
+    .on('change', () => (points = []))
+  fGrid.addBinding(params, 'pointSize', { min: 1, max: 20, step: 0.5 })
 
-  const f1 = pane.addFolder({ title: 'Shape Render' })
-  f1.addBinding(params, 'shape', {
+  // Appearance controls
+  const fAppearance = pane.addFolder({ title: 'Appearance' })
+  fAppearance.addBinding(params, 'color')
+  fAppearance.addBinding(params, 'shape', {
     options: { rect: 'rect', circle: 'circle', both: 'both' },
-    label: 'shape',
   })
-  f1.addBinding(params, 'circle', {
-    options: { complete: 'complete', semi: 'semi', quarter: 'quarter' },
-    label: 'circle',
+  fAppearance.addBinding(params, 'circle', {
+    options: {
+      complete: 'complete',
+      semi: 'semi',
+      quarter: 'quarter',
+    },
   })
 
-  const f2 = pane.addFolder({ title: 'Linear Interpolation' })
-  f2.addBinding(params, 'interpolation', {
+  // Physics / Repulsion
+  const fPhysics = pane.addFolder({ title: 'Physics' })
+  fPhysics.addBinding(params, 'repulsionRadius', { min: 10, max: 200, step: 1 })
+  fPhysics.addBinding(params, 'repulsionStrength', {
+    min: 1,
+    max: 100,
+    step: 1,
+  })
+
+  // Interpolation / Return motion
+  const fInterpolation = pane.addFolder({ title: 'Interpolation' })
+  fInterpolation.addBinding(params, 'easing', {
+    min: 0.01,
+    max: 0.5,
+    step: 0.01,
+  })
+  fInterpolation.addBinding(params, 'interpolation', {
     options: FUNCTIONS_INTERPOLATION,
     label: 'function',
   })
