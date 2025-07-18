@@ -87,6 +87,12 @@ const params = {
   easing: 0.1,
   interpolation: FUNCTIONS_INTERPOLATION.easeInOutQuad,
   rotation: 0,
+  colorsByQuadrant: {
+    topLeft: '#8338ec',
+    topRight: '#fb5607',
+    bottomLeft: '#ffbe0b',
+    bottomRight: '#3a86ff',
+  },
 }
 
 let mouse = { x: -9999, y: -9999 }
@@ -113,9 +119,20 @@ const sketch = () => {
     context.fillStyle = 'black'
     context.fillRect(0, 0, width, height)
 
-    context.strokeStyle = params.color
+    const centerX = width / 2
+    const centerY = height / 2
 
     for (const p of points) {
+      if (p.x0 < centerX && p.y0 < centerY) {
+        context.strokeStyle = params.colorsByQuadrant.topLeft
+      } else if (p.x0 >= centerX && p.y0 < centerY) {
+        context.strokeStyle = params.colorsByQuadrant.topRight
+      } else if (p.x0 < centerX && p.y0 >= centerY) {
+        context.strokeStyle = params.colorsByQuadrant.bottomLeft
+      } else {
+        context.strokeStyle = params.colorsByQuadrant.bottomRight
+      }
+
       const { dx, dy, dist } = getDistance(p.x, p.y, mouse.x, mouse.y)
 
       const inRepulsion = dist < params.repulsionRadius && dist > 0.01
@@ -207,6 +224,21 @@ function createPane() {
     max: 360,
     step: 1,
     label: 'start angle',
+  })
+
+  // Quadrant colors
+  const fQuadrants = pane.addFolder({ title: 'Quadrant Colors' })
+  fQuadrants.addBinding(params.colorsByQuadrant, 'topLeft', {
+    label: 'Top Left',
+  })
+  fQuadrants.addBinding(params.colorsByQuadrant, 'topRight', {
+    label: 'Top Right',
+  })
+  fQuadrants.addBinding(params.colorsByQuadrant, 'bottomLeft', {
+    label: 'Bottom Left',
+  })
+  fQuadrants.addBinding(params.colorsByQuadrant, 'bottomRight', {
+    label: 'Bottom Right',
   })
 
   // Physics / Repulsion
