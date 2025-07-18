@@ -7,6 +7,7 @@ const FUNCTIONS_INTERPOLATION = {
 }
 
 // Utilities functions
+// Calculate distance and delta between two points
 function getDistance(x1, y1, x2, y2) {
   const dx = x1 - x2
   const dy = y1 - y2
@@ -18,32 +19,43 @@ function getDistance(x1, y1, x2, y2) {
   }
 }
 
+// Smoothly interpolate a point back to its original position using easing
 function easeInOutQuad(targetX, targetY, currentX, currentY, easing) {
   const newX = (targetX - currentX) * easing
   const newY = (targetY - currentY) * easing
   return { newX, newY }
 }
 
+// Linear interpolation between two values
 function lerp(start, end, t) {
   return start + (end - start) * t
 }
 
+// Calculate repulsion offset based on distance and force
 function applyRepulsion(dx, dy, dist, repulsionRadius, repulsionStrength) {
+  // Calculate force based on how close the point is to the center
+  // Value ranges from 1 (center) to 0 (edge of repulsion radius)
   const force = (repulsionRadius - dist) / repulsionRadius
+
+  // Normalize direction vector
   const nx = dx / dist
   const ny = dy / dist
+
+  // Apply force and strength to get offset
   const offsetX = nx * force * repulsionStrength
   const offsetY = ny * force * repulsionStrength
 
   return { offsetX, offsetY }
 }
 
+// Draw a square centered at (x, y)
 function drawRect(ctx, x, y, size) {
   ctx.beginPath()
   ctx.rect(x - size / 2, y - size / 2, size, size)
   ctx.stroke()
 }
 
+// Draw a circle (or arc) centered at (x, y), optionally rotated
 function drawCircle(ctx, x, y, size, typeCircle, startAngleDeg = 0) {
   const typesCircle = {
     complete: 2 * Math.PI,
