@@ -71,6 +71,27 @@ function drawCircle(ctx, x, y, size, typeCircle, startAngleDeg = 0) {
   ctx.stroke()
 }
 
+function paintByQuadrant(
+  ctx,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+  point,
+  centerX,
+  centerY
+) {
+  if (point.x0 < centerX && point.y0 < centerY) {
+    ctx.strokeStyle = topLeft
+  } else if (point.x0 >= centerX && point.y0 < centerY) {
+    ctx.strokeStyle = topRight
+  } else if (point.x0 < centerX && point.y0 >= centerY) {
+    ctx.strokeStyle = bottomLeft
+  } else {
+    ctx.strokeStyle = bottomRight
+  }
+}
+
 const settings = {
   animate: true,
 }
@@ -122,16 +143,18 @@ const sketch = () => {
     const centerX = width / 2
     const centerY = height / 2
 
+    context.strokeStyle = params.color
     for (const p of points) {
-      if (p.x0 < centerX && p.y0 < centerY) {
-        context.strokeStyle = params.colorsByQuadrant.topLeft
-      } else if (p.x0 >= centerX && p.y0 < centerY) {
-        context.strokeStyle = params.colorsByQuadrant.topRight
-      } else if (p.x0 < centerX && p.y0 >= centerY) {
-        context.strokeStyle = params.colorsByQuadrant.bottomLeft
-      } else {
-        context.strokeStyle = params.colorsByQuadrant.bottomRight
-      }
+      paintByQuadrant(
+        context,
+        params.colorsByQuadrant.topLeft,
+        params.colorsByQuadrant.topRight,
+        params.colorsByQuadrant.bottomLeft,
+        params.colorsByQuadrant.bottomRight,
+        p,
+        centerX,
+        centerY
+      )
 
       const { dx, dy, dist } = getDistance(p.x, p.y, mouse.x, mouse.y)
 
