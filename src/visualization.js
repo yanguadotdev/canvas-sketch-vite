@@ -1,6 +1,46 @@
 import canvasSketch from 'canvas-sketch'
 import { Pane } from 'tweakpane'
 
+// Utilities functions
+function getDistance(x1, y1, x2, y2) {
+  const dx = x1 - x2
+  const dy = y1 - y2
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  return {
+    dx,
+    dy,
+    dist,
+  }
+}
+
+function easeInOutQuad(targetX, targetY, currentX, currentY, easing) {
+  const newX = (targetX - currentX) * easing
+  const newY = (targetY - currentY) * easing
+  return { newX, newY }
+}
+
+function applyRepulsion(dx, dy, dist, repulsionRadius, repulsionStrength) {
+  const force = (repulsionRadius - dist) / repulsionRadius
+  const nx = dx / dist
+  const ny = dy / dist
+  const offsetX = nx * force * repulsionStrength
+  const offsetY = ny * force * repulsionStrength
+
+  return { offsetX, offsetY }
+}
+
+function drawRect(ctx, x, y, size) {
+  ctx.beginPath()
+  ctx.rect(x - size / 2, y - size / 2, size, size)
+  ctx.stroke()
+}
+
+function drawCircle(ctx, x, y, size) {
+  ctx.beginPath()
+  ctx.arc(x, y, size, 0, Math.PI * 2)
+  ctx.stroke()
+}
+
 const settings = {
   animate: true,
 }
@@ -43,46 +83,44 @@ const sketch = () => {
     context.strokeStyle = params.color
 
     for (const p of points) {
-      const dx = p.x - mouse.x
-      const dy = p.y - mouse.y
-      const distance = Math.sqrt(dx * dx + dy * dy)
+      const { dx, dy, dist } = getDistance(p.x, p.y, mouse.x, mouse.y)
 
-      if (distance < params.repulsionRadius && distance > 0.01) {
-        const force =
-          (params.repulsionRadius - distance) / params.repulsionRadius
-        const nx = dx / distance
-        const ny = dy / distance
-        const offsetX = nx * force * params.repulsionStrength
-        const offsetY = ny * force * params.repulsionStrength
-
-        p.x += offsetX
-        p.y += offsetY
+      let nx, ny
+      // Apply repulsion
+      if (dist < params.repulsionRadius && dist > 0.01) {
+        const { offsetX, offsetY } = applyRepulsion(
+          dx,
+          dy,
+          dist,
+          params.repulsionRadius,
+          params.repulsionStrength
+        )
+        nx = offsetX
+        ny = offsetY
       } else {
         // Lerp back to original position
-        p.x += (p.x0 - p.x) * params.easing
-        p.y += (p.y0 - p.y) * params.easing
+        const { newX, newY } = easeInOutQuad(
+          p.x0,
+          p.y0,
+          p.x,
+          p.y,
+          params.easing
+        )
+        nx = newX
+        ny = newY
       }
 
-      context.beginPath()
+      p.x += nx
+      p.y += ny
+
       if (params.shape === 'rect') {
-        context.rect(
-          p.x - params.pointSize / 2,
-          p.y - params.pointSize / 2,
-          params.pointSize,
-          params.pointSize
-        )
+        drawRect(context, p.x, p.y, params.pointSize)
       } else if (params.shape === 'circle') {
-        context.arc(p.x, p.y, params.pointSize / 2, 0, Math.PI * 2)
+        drawCircle(context, p.x, p.y, params.pointSize / 2)
       } else if (params.shape === 'both') {
-        context.arc(p.x, p.y, params.pointSize / 4, 0, Math.PI * 2)
-        context.rect(
-          p.x - params.pointSize / 2,
-          p.y - params.pointSize / 2,
-          params.pointSize,
-          params.pointSize
-        )
+        drawCircle(context, p.x, p.y, params.pointSize / 4)
+        drawRect(context, p.x, p.y, params.pointSize)
       }
-      context.stroke()
     }
   }
 }
