@@ -44,9 +44,14 @@ function drawRect(ctx, x, y, size) {
   ctx.stroke()
 }
 
-function drawCircle(ctx, x, y, size) {
+function drawCircle(ctx, x, y, size, typeCircle) {
+  const typesCircle = {
+    complete: 2 * Math.PI,
+    semi: Math.PI,
+    quarter: Math.PI / 2,
+  }
   ctx.beginPath()
-  ctx.arc(x, y, size, 0, Math.PI * 2)
+  ctx.arc(x, y, size, 0, typesCircle[typeCircle])
   ctx.stroke()
 }
 
@@ -60,6 +65,7 @@ const params = {
   pointSize: 12,
   color: '#ffffff',
   shape: 'both',
+  circle: 'complete',
   repulsionRadius: 80,
   repulsionStrength: 30,
   easing: 0.1,
@@ -128,9 +134,9 @@ const sketch = () => {
       if (params.shape === 'rect') {
         drawRect(context, p.x, p.y, params.pointSize)
       } else if (params.shape === 'circle') {
-        drawCircle(context, p.x, p.y, params.pointSize / 2)
+        drawCircle(context, p.x, p.y, params.pointSize / 2, params.circle)
       } else if (params.shape === 'both') {
-        drawCircle(context, p.x, p.y, params.pointSize / 4)
+        drawCircle(context, p.x, p.y, params.pointSize / 4, params.circle)
         drawRect(context, p.x, p.y, params.pointSize)
       }
     }
@@ -152,9 +158,15 @@ function createPane() {
   pane.addBinding(params, 'repulsionStrength', { min: 1, max: 100, step: 1 })
   pane.addBinding(params, 'easing', { min: 0.01, max: 0.5, step: 0.01 })
   pane.addBinding(params, 'color')
-  pane.addBinding(params, 'shape', {
+
+  const f1 = pane.addFolder({ title: 'Shape Render' })
+  f1.addBinding(params, 'shape', {
     options: { rect: 'rect', circle: 'circle', both: 'both' },
     label: 'shape',
+  })
+  f1.addBinding(params, 'circle', {
+    options: { complete: 'complete', semi: 'semi', quarter: 'quarter' },
+    label: 'circle',
   })
 
   const f2 = pane.addFolder({ title: 'Linear Interpolation' })
