@@ -108,6 +108,7 @@ const params = {
   easing: 0.1,
   interpolation: FUNCTIONS_INTERPOLATION.easeInOutQuad,
   rotation: 0,
+  paintByQuadrant: true,
   colorsByQuadrant: {
     topLeft: '#8338ec',
     topRight: '#fb5607',
@@ -143,18 +144,21 @@ const sketch = () => {
     const centerX = width / 2
     const centerY = height / 2
 
-    context.strokeStyle = params.color
     for (const p of points) {
-      paintByQuadrant(
-        context,
-        params.colorsByQuadrant.topLeft,
-        params.colorsByQuadrant.topRight,
-        params.colorsByQuadrant.bottomLeft,
-        params.colorsByQuadrant.bottomRight,
-        p,
-        centerX,
-        centerY
-      )
+      if (params.paintByQuadrant) {
+        paintByQuadrant(
+          context,
+          params.colorsByQuadrant.topLeft,
+          params.colorsByQuadrant.topRight,
+          params.colorsByQuadrant.bottomLeft,
+          params.colorsByQuadrant.bottomRight,
+          p,
+          centerX,
+          centerY
+        )
+      } else {
+        context.strokeStyle = params.color
+      }
 
       const { dx, dy, dist } = getDistance(p.x, p.y, mouse.x, mouse.y)
 
@@ -248,9 +252,19 @@ function createPane() {
     step: 1,
     label: 'start angle',
   })
+  fAppearance
+    .addBinding(params, 'paintByQuadrant', {
+      label: 'paint by quadrant',
+    })
+    .on('change', (ev) => {
+      fQuadrants.hidden = !ev.value
+    })
 
   // Quadrant colors
-  const fQuadrants = pane.addFolder({ title: 'Quadrant Colors' })
+  const fQuadrants = pane.addFolder({
+    title: 'Quadrant Colors',
+    hidden: !params.paintByQuadrant,
+  })
   fQuadrants.addBinding(params.colorsByQuadrant, 'topLeft', {
     label: 'Top Left',
   })
