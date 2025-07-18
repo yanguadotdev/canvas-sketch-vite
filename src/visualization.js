@@ -44,14 +44,18 @@ function drawRect(ctx, x, y, size) {
   ctx.stroke()
 }
 
-function drawCircle(ctx, x, y, size, typeCircle) {
+function drawCircle(ctx, x, y, size, typeCircle, startAngleDeg = 0) {
   const typesCircle = {
     complete: 2 * Math.PI,
     semi: Math.PI,
     quarter: Math.PI / 2,
   }
+
+  const startAngle = (startAngleDeg * Math.PI) / 180 // convert degrees to radians
+  const endAngle = startAngle + typesCircle[typeCircle]
+
   ctx.beginPath()
-  ctx.arc(x, y, size, 0, typesCircle[typeCircle])
+  ctx.arc(x, y, size, startAngle, endAngle)
   ctx.stroke()
 }
 
@@ -70,6 +74,7 @@ const params = {
   repulsionStrength: 30,
   easing: 0.1,
   interpolation: FUNCTIONS_INTERPOLATION.easeInOutQuad,
+  rotation: 0,
 }
 
 let mouse = { x: -9999, y: -9999 }
@@ -134,9 +139,23 @@ const sketch = () => {
       if (params.shape === 'rect') {
         drawRect(context, p.x, p.y, params.pointSize)
       } else if (params.shape === 'circle') {
-        drawCircle(context, p.x, p.y, params.pointSize / 2, params.circle)
+        drawCircle(
+          context,
+          p.x,
+          p.y,
+          params.pointSize / 2,
+          params.circle,
+          params.rotation
+        )
       } else if (params.shape === 'both') {
-        drawCircle(context, p.x, p.y, params.pointSize / 4, params.circle)
+        drawCircle(
+          context,
+          p.x,
+          p.y,
+          params.pointSize / 4,
+          params.circle,
+          params.rotation
+        )
         drawRect(context, p.x, p.y, params.pointSize)
       }
     }
@@ -170,6 +189,12 @@ function createPane() {
       semi: 'semi',
       quarter: 'quarter',
     },
+  })
+  fAppearance.addBinding(params, 'rotation', {
+    min: 0,
+    max: 360,
+    step: 1,
+    label: 'start angle',
   })
 
   // Physics / Repulsion
