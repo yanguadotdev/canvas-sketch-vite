@@ -6,10 +6,11 @@ const settings = {
 }
 
 const params = {
-  size: 500,
+  size: 600,
   spacing: 20,
-  pointSize: 4,
+  pointSize: 12,
   color: '#ffffff',
+  shape: 'both',
 }
 
 const sketch = () => {
@@ -29,7 +30,25 @@ const sketch = () => {
         const y = startY + j * params.spacing
 
         context.beginPath()
-        context.arc(x, y, params.pointSize, 0, Math.PI * 2)
+        if (params.shape === 'rect') {
+          context.rect(
+            x - params.pointSize / 2,
+            y - params.pointSize / 2,
+            params.pointSize,
+            params.pointSize
+          )
+        } else if (params.shape === 'circle') {
+          context.arc(x, y, params.pointSize / 2, 0, Math.PI * 2)
+        } else if (params.shape === 'both') {
+          context.arc(x, y, params.pointSize / 2, 0, Math.PI * 2)
+          context.rect(
+            x - params.pointSize / 2,
+            y - params.pointSize / 2,
+            params.pointSize,
+            params.pointSize
+          )
+        }
+
         context.stroke()
       }
     }
@@ -39,11 +58,15 @@ const sketch = () => {
 canvasSketch(sketch, settings)
 
 function createPane() {
-  const pane = new Pane()
+  const pane = new Pane({ title: 'Parameters' })
   pane.addBinding(params, 'size', { min: 100, max: 1000, step: 10 })
   pane.addBinding(params, 'spacing', { min: 5, max: 100, step: 1 })
-  pane.addBinding(params, 'pointSize', { min: 1, max: 10, step: 0.5 })
+  pane.addBinding(params, 'pointSize', { min: 1, max: 20, step: 0.5 })
   pane.addBinding(params, 'color')
+  pane.addBinding(params, 'shape', {
+    options: { rect: 'rect', circle: 'circle', both: 'both' },
+    label: 'shape',
+  })
 }
 
 createPane()
