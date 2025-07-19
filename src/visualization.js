@@ -97,7 +97,8 @@ const settings = {
 }
 
 const params = {
-  size: 600,
+  width: 600,
+  height: 600,
   spacing: 20,
   pointSize: 12,
   color: '#ffffff',
@@ -124,10 +125,10 @@ const sketch = () => {
   return ({ context, width, height }) => {
     // Initialize points only once
     if (points.length === 0) {
-      const cols = Math.floor(params.size / params.spacing)
-      const rows = cols
-      const startX = width / 2 - params.size / 2
-      const startY = height / 2 - params.size / 2
+      const cols = Math.floor(params.width / params.spacing)
+      const rows = Math.floor(params.height / params.spacing)
+      const startX = width / 2 - params.width / 2
+      const startY = height / 2 - params.height / 2
 
       for (let i = 0; i <= cols; i++) {
         for (let j = 0; j <= rows; j++) {
@@ -226,7 +227,10 @@ function createPane() {
   // Grid controls
   const fGrid = pane.addFolder({ title: 'Grid' })
   fGrid
-    .addBinding(params, 'size', { min: 100, max: 1000, step: 10 })
+    .addBinding(params, 'width', { min: 100, max: 1000, step: 10 })
+    .on('change', () => (points = []))
+  fGrid
+    .addBinding(params, 'height', { min: 100, max: 1000, step: 10 })
     .on('change', () => (points = []))
   fGrid
     .addBinding(params, 'spacing', { min: 5, max: 100, step: 1 })
