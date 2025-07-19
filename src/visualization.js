@@ -295,13 +295,6 @@ function createPane() {
     step: 1,
     label: 'start angle',
   })
-  fAppearance
-    .addBinding(params, 'paintByQuadrant', {
-      label: 'paint by quadrant',
-    })
-    .on('change', (ev) => {
-      fQuadrants.hidden = !ev.value
-    })
 
   // Quadrant colors
   const fQuadrants = pane.addFolder({
@@ -342,13 +335,18 @@ function createPane() {
     label: 'function',
   })
 
+  // Flags Folder
   const fFlags = pane.addFolder({ title: 'Flags' })
-  fFlags
+  const drawFlagsBinding = fFlags
     .addBinding(params, 'drawFlags', { label: 'Draw Flag' })
     .on('change', (ev) => {
-      params.paintByQuadrant = false
-      fAppearance.refresh()
       fFlagsControls.hidden = !ev.value
+
+      if (ev.value) {
+        params.paintByQuadrant = false // 🔧 disable paintByQuadrant
+        paintByQuadrantBinding.refresh() // 🔧 refresh paintByQuadrant checkbox
+        fQuadrants.hidden = true // 🔧 hide quadrants
+      }
     })
 
   const fFlagsControls = fFlags.addFolder({
@@ -365,6 +363,21 @@ function createPane() {
     options: flagNames,
     label: 'Country',
   })
+
+  // Paint by Quadrant toggle (se mueve al final para usar las refs anteriores)
+  const paintByQuadrantBinding = fAppearance
+    .addBinding(params, 'paintByQuadrant', {
+      label: 'paint by quadrant',
+    })
+    .on('change', (ev) => {
+      fQuadrants.hidden = !ev.value
+
+      if (ev.value) {
+        params.drawFlags = false // 🔧 disabled drawFlags
+        drawFlagsBinding.refresh() // 🔧 refresh drawFlags checkbox
+        fFlagsControls.hidden = true // 🔧 hide flags
+      }
+    })
 }
 
 createPane()
