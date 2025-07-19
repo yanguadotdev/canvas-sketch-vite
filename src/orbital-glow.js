@@ -19,7 +19,7 @@ const params = {
   nearColor: '#00ffff',
   rotationAxis: 'y', // 'x' or 'y'
   renderMode: 'points', // 'points' or 'grid'
-  easing: .1
+  easing: 0.1
 }
 
 let points = []
@@ -39,8 +39,8 @@ const generatePoints = () => {
       points.push({
         x, y, z,
         x0: x, y0: y, z0: z, // original 3D position
-        screenX: 0, // smoothed screen x
-        screenY: 0  // smoothed screen y
+        screenX: x,
+        screenY: y,
       })
     }
   }
@@ -55,135 +55,85 @@ const sketch = () => {
 
     const angle = frame * params.rotationSpeed
     const fov = params.fov
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const halfW = width / 2
+    const halfH = height / 2
+    const mouseX = mouse.x - halfW
+    const mouseY = mouse.y - halfH
 
     context.save()
-    context.translate(width / 2, height / 2)
+    context.translate(halfW, halfH)
 
-    for (let i = 0; i < params.latSteps; i++) {
-      for (let j = 0; j < params.lonSteps; j++) {
-        const index = i * params.lonSteps + j
-        let p = points[index]
-        if (!p) continue
+    for (let i = 0; i < points.length; i++) {
+      let p = points[i]
+      let x = p.x0
+      let y = p.y0
+      let z = p.z0
 
-        // Rotate point around selected axis
-        let x = p.x
-        let y = p.y
-        let z = p.z
+      // Rotate
+      if (params.rotationAxis === 'y') {
+        const newX = x * cos - z * sin
+        const newZ = x * sin + z * cos
+        x = newX
+        z = newZ
+      } else if (params.rotationAxis === 'x') {
+        const newY = y * cos - z * sin
+        const newZ = y * sin + z * cos
+        y = newY
+        z = newZ
+      }
 
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
+      const scale = fov / (fov + z)
+      const targetX = x * scale
+      const targetY = y * scale
+      const size = scale * params.pointSize
 
-        if (params.rotationAxis === 'y') {
-          const newX = x * cos - z * sin
-          const newZ = x * sin + z * cos
-          x = newX
-          z = newZ
-        } else if (params.rotationAxis === 'x') {
-          const newY = y * cos - z * sin
-          const newZ = y * sin + z * cos
-          y = newY
-          z = newZ
-        }
+      const dx = targetX - mouseX
+      const dy = targetY - mouseY
+      const distSq = dx * dx + dy * dy
+      const dist = Math.sqrt(distSq)
 
-        // Project to screen
-        const scale = fov / (fov + z)
-        const targetX = x * scale
-        const targetY = y * scale
-        const size = scale * params.pointSize
+      const isNear = dist < params.mouseRadius
+      const color = isNear ? params.nearColor : params.baseColor
+      context.fillStyle = color
+      context.strokeStyle = color
 
-        // Compute mouse distance
-        const dx = targetX - (mouse.x - width / 2)
-        const dy = targetY - (mouse.y - height / 2)
-        const dist = Math.sqrt(dx * dx + dy * dy)
+      let finalX = targetX
+      let finalY = targetY
 
-        // Set color depending on distance to mouse
-        const color = dist < params.mouseRadius ? params.nearColor : params.baseColor
-        context.fillStyle = color
-        context.strokeStyle = color
+      if (isNear) {
+        const force = (1 - dist / params.mouseRadius) * params.force
+        const angleAway = Math.atan2(dy, dx)
+        finalX += Math.cos(angleAway) * force
+        finalY += Math.sin(angleAway) * force
+      }
 
-        // Compute final screen position (with repulsion if close)
-        let finalX = targetX
-        let finalY = targetY
+      p.screenX += (finalX - p.screenX) * params.easing
+      p.screenY += (finalY - p.screenY) * params.easing
 
-        if (dist < params.mouseRadius) {
-          const force = (1 - dist / params.mouseRadius) * params.force
-          const angleAway = Math.atan2(dy, dx)
-          finalX += Math.cos(angleAway) * force
-          finalY += Math.sin(angleAway) * force
-        }
+      if (params.renderMode === 'points') {
+        context.beginPath()
+        context.arc(p.screenX, p.screenY, size, 0, Math.PI * 2)
+        context.fill()
+      } else if (params.renderMode === 'grid') {
+        const j = i % params.lonSteps
+        const row = Math.floor(i / params.lonSteps)
 
-        // Smooth interpolation toward final position (easing)
-        p.screenX += (finalX - p.screenX) * params.easing
-        p.screenY += (finalY - p.screenY) * params.easing
-
-        // Render point
-        if (params.renderMode === 'points') {
+        if (j < params.lonSteps - 1) {
+          const right = points[i + 1]
           context.beginPath()
-          context.arc(p.screenX, p.screenY, size, 0, Math.PI * 2)
-          context.fill()
+          context.moveTo(p.screenX, p.screenY)
+          context.lineTo(right.screenX, right.screenY)
+          context.stroke()
         }
 
-        // Optional grid connection mode
-        if (params.renderMode === 'grid') {
-          if (j < params.lonSteps - 1) {
-            const right = points[i * params.lonSteps + (j + 1)]
-            if (right) {
-              let rx = right.x
-              let ry = right.y
-              let rz = right.z
-
-              if (params.rotationAxis === 'y') {
-                const newX = rx * cos - rz * sin
-                const newZ = rx * sin + rz * cos
-                rx = newX
-                rz = newZ
-              } else if (params.rotationAxis === 'x') {
-                const newY = ry * cos - rz * sin
-                const newZ = ry * sin + rz * cos
-                ry = newY
-                rz = newZ
-              }
-
-              const rscale = fov / (fov + rz)
-              const rpx = rx * rscale
-              const rpy = ry * rscale
-
-              context.beginPath()
-              context.moveTo(p.screenX, p.screenY)
-              context.lineTo(rpx, rpy)
-              context.stroke()
-            }
-          }
-
-          if (i < params.latSteps - 1) {
-            const below = points[(i + 1) * params.lonSteps + j]
-            if (below) {
-              let bx = below.x
-              let by = below.y
-              let bz = below.z
-
-              if (params.rotationAxis === 'y') {
-                const newX = bx * cos - bz * sin
-                const newZ = bx * sin + bz * cos
-                bx = newX
-                bz = newZ
-              } else if (params.rotationAxis === 'x') {
-                const newY = by * cos - bz * sin
-                const newZ = by * sin + bz * cos
-                by = newY
-                bz = newZ
-              }
-
-              const bscale = fov / (fov + bz)
-              const bpx = bx * bscale
-              const bpy = by * bscale
-
-              context.beginPath()
-              context.moveTo(p.screenX, p.screenY)
-              context.lineTo(bpx, bpy)
-              context.stroke()
-            }
-          }
+        if (row < params.latSteps - 1) {
+          const below = points[i + params.lonSteps]
+          context.beginPath()
+          context.moveTo(p.screenX, p.screenY)
+          context.lineTo(below.screenX, below.screenY)
+          context.stroke()
         }
       }
     }
@@ -194,13 +144,11 @@ const sketch = () => {
 
 canvasSketch(sketch, settings)
 
-// Mouse movement listener
 window.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX
   mouse.y = e.clientY
 })
 
-// GUI controls
 const createPane = () => {
   const pane = new Pane({ title: 'Parameters' })
 
