@@ -7,6 +7,12 @@ const FUNCTIONS_INTERPOLATION = {
 }
 
 // Utilities functions
+function getStartPositions(width, height) {
+  const startX = window.innerWidth / 2 - width / 2
+  const startY = window.innerHeight / 2 - height / 2
+  return { startX, startY }
+}
+
 // Calculate distance and delta between two points
 function getDistance(x1, y1, x2, y2) {
   const dx = x1 - x2
@@ -75,14 +81,15 @@ function paintFlag(ctx, point, width, height, flagConfig) {
   const { type, colors } = flagConfig
   const numBands = colors.length
   ctx.strokeStyle = '#ffffff' // fallback
+  const { startX, startY } = getStartPositions(width, height)
 
   if (type === 'horizontal') {
     const bandHeight = height / numBands
-    const bandIndex = Math.floor(point.y0 / bandHeight)
+    const bandIndex = Math.floor((point.y0 - startY) / bandHeight)
     ctx.strokeStyle = colors[bandIndex]
   } else if (type === 'vertical') {
     const bandWidth = width / numBands
-    const bandIndex = Math.floor(point.x0 / bandWidth)
+    const bandIndex = Math.floor((point.x0 - startX) / bandWidth)
     ctx.strokeStyle = colors[bandIndex]
   }
 }
@@ -145,8 +152,7 @@ const sketch = () => {
     if (points.length === 0) {
       const cols = Math.floor(params.width / params.spacing)
       const rows = Math.floor(params.height / params.spacing)
-      const startX = width / 2 - params.width / 2
-      const startY = height / 2 - params.height / 2
+      const { startX, startY } = getStartPositions(params.width, params.height)
 
       for (let i = 0; i <= cols; i++) {
         for (let j = 0; j <= rows; j++) {
@@ -165,7 +171,13 @@ const sketch = () => {
 
     for (const p of points) {
       if (params.drawFlags) {
-        paintFlag(context, p, width, height, FLAGS[params.selectedFlag])
+        paintFlag(
+          context,
+          p,
+          params.width,
+          params.height,
+          FLAGS[params.selectedFlag]
+        )
       } else if (params.paintByQuadrant) {
         paintByQuadrant(
           context,
@@ -250,13 +262,21 @@ const FLAGS = {
     type: 'vertical',
     colors: ['#0055a4', '#ffffff', '#ef4135'],
   },
-  Germany: {
-    type: 'horizontal',
-    colors: ['#000000', '#dd0000', '#ffce00'],
-  },
   Italy: {
     type: 'vertical',
     colors: ['#009246', '#ffffff', '#ce2b37'],
+  },
+  Colombia: {
+    type: 'horizontal',
+    colors: ['#ffff00', '#0000ff', '#ff0000'],
+  },
+  Spain: {
+    type: 'horizontal',
+    colors: ['#ff0000', '#ffff00', '#ff0000'],
+  },
+  Argentina: {
+    type: 'horizontal',
+    colors: ['skyblue', '#ffffff', 'skyblue'],
   },
 }
 
@@ -364,7 +384,7 @@ function createPane() {
     label: 'Country',
   })
 
-  // Paint by Quadrant toggle (se mueve al final para usar las refs anteriores)
+  // Paint by Quadrant toggle
   const paintByQuadrantBinding = fAppearance
     .addBinding(params, 'paintByQuadrant', {
       label: 'paint by quadrant',
