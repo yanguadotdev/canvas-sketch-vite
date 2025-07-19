@@ -1,4 +1,3 @@
-// orbit.js
 import canvasSketch from 'canvas-sketch'
 import math from 'canvas-sketch-util/math'
 import { Pane } from 'tweakpane'
