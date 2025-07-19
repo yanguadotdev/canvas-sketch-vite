@@ -3,7 +3,6 @@ import { random, math } from 'canvas-sketch-util'
 import { Pane } from 'tweakpane'
 
 const settings = {
-  dimensions: [1080, 1080],
   animate: true,
 }
 
@@ -22,7 +21,7 @@ const params = {
 
 const sketch = () => {
   return ({ context, width, height, frame }) => {
-    context.fillStyle = 'white'
+    context.fillStyle = 'black'
     context.fillRect(0, 0, width, height)
 
     const cols = params.cols
@@ -35,6 +34,7 @@ const sketch = () => {
     const margx = (width - gridw) * 0.5
     const margy = (height - gridh) * 0.5
 
+    context.strokeStyle = 'white'
     for (let i = 0; i < numCells; i++) {
       const col = i % cols
       const row = Math.floor(i / cols)
