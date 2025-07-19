@@ -61,7 +61,7 @@ const sketch = ({ context, width, height }) => {
     context.textBaseline = 'middle'
     context.textAlign = 'center'
 
-    // context.drawImage(typeCanvas, 0, 0);
+    context.drawImage(typeCanvas, 0, 0);
 
     for (let i = 0; i < numCells; i++) {
       const col = i % cols
@@ -106,8 +106,40 @@ const getGlyph = (v) => {
   return random.pick(glyphs)
 }
 
+const isLetter = (letter) => {
+  return [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ].includes(letter)
+}
+
 const onKeyUp = (e) => {
   text = e.key.toUpperCase()
+  if (!isLetter(text)) return
   manager.render()
 }
 
