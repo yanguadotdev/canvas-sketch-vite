@@ -25,19 +25,23 @@ const params = {
 let points = []
 let mouse = { x: 0, y: 0 }
 
+// Generate sphere points with initial and original positions
 const generatePoints = () => {
   points = []
   for (let i = 0; i < params.latSteps; i++) {
     const theta = math.mapRange(i, 0, params.latSteps - 1, 0, Math.PI)
-
     for (let j = 0; j < params.lonSteps; j++) {
       const phi = math.mapRange(j, 0, params.lonSteps - 1, 0, Math.PI * 2)
-
       const x = params.radius * Math.sin(theta) * Math.cos(phi)
       const y = params.radius * Math.cos(theta)
       const z = params.radius * Math.sin(theta) * Math.sin(phi)
 
-      points.push({ x, y, z })
+      points.push({
+        x, y, z,
+        x0: x, y0: y, z0: z, // original 3D position
+        screenX: 0, // smoothed screen x
+        screenY: 0  // smoothed screen y
+      })
     }
   }
 }
@@ -61,6 +65,7 @@ const sketch = () => {
         let p = points[index]
         if (!p) continue
 
+        // Rotate point around selected axis
         let x = p.x
         let y = p.y
         let z = p.z
@@ -80,33 +85,46 @@ const sketch = () => {
           z = newZ
         }
 
+        // Project to screen
         const scale = fov / (fov + z)
-        let px = x * scale
-        let py = y * scale
+        const targetX = x * scale
+        const targetY = y * scale
         const size = scale * params.pointSize
 
-        const dx = px - (mouse.x - width / 2)
-        const dy = py - (mouse.y - height / 2)
+        // Compute mouse distance
+        const dx = targetX - (mouse.x - width / 2)
+        const dy = targetY - (mouse.y - height / 2)
         const dist = Math.sqrt(dx * dx + dy * dy)
 
-        const color =
-          dist < params.mouseRadius ? params.nearColor : params.baseColor
+        // Set color depending on distance to mouse
+        const color = dist < params.mouseRadius ? params.nearColor : params.baseColor
         context.fillStyle = color
         context.strokeStyle = color
+
+        // Compute final screen position (with repulsion if close)
+        let finalX = targetX
+        let finalY = targetY
 
         if (dist < params.mouseRadius) {
           const force = (1 - dist / params.mouseRadius) * params.force
           const angleAway = Math.atan2(dy, dx)
-          px += Math.cos(angleAway) * force
-          py += Math.sin(angleAway) * force
+          finalX += Math.cos(angleAway) * force
+          finalY += Math.sin(angleAway) * force
         }
 
+        // Smooth interpolation toward final position (easing)
+        p.screenX += (finalX - p.screenX) * 0.1
+        p.screenY += (finalY - p.screenY) * 0.1
+
+        // Render point
         if (params.renderMode === 'points') {
           context.beginPath()
-          context.arc(px, py, size, 0, Math.PI * 2)
+          context.arc(p.screenX, p.screenY, size, 0, Math.PI * 2)
           context.fill()
-        } else if (params.renderMode === 'grid') {
-          // Dibujar líneas con el punto de la derecha y el de abajo si existen
+        }
+
+        // Optional grid connection mode
+        if (params.renderMode === 'grid') {
           if (j < params.lonSteps - 1) {
             const right = points[i * params.lonSteps + (j + 1)]
             if (right) {
@@ -131,7 +149,7 @@ const sketch = () => {
               const rpy = ry * rscale
 
               context.beginPath()
-              context.moveTo(px, py)
+              context.moveTo(p.screenX, p.screenY)
               context.lineTo(rpx, rpy)
               context.stroke()
             }
@@ -161,7 +179,7 @@ const sketch = () => {
               const bpy = by * bscale
 
               context.beginPath()
-              context.moveTo(px, py)
+              context.moveTo(p.screenX, p.screenY)
               context.lineTo(bpx, bpy)
               context.stroke()
             }
@@ -176,27 +194,20 @@ const sketch = () => {
 
 canvasSketch(sketch, settings)
 
+// Mouse movement listener
 window.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX
   mouse.y = e.clientY
 })
 
+// GUI controls
 const createPane = () => {
   const pane = new Pane({ title: 'Parameters' })
 
   const f1 = pane.addFolder({ title: 'Sphere' })
-  f1.addBinding(params, 'radius', { min: 50, max: 500, step: 1 }).on(
-    'change',
-    generatePoints
-  )
-  f1.addBinding(params, 'latSteps', { min: 10, max: 200, step: 1 }).on(
-    'change',
-    generatePoints
-  )
-  f1.addBinding(params, 'lonSteps', { min: 10, max: 200, step: 1 }).on(
-    'change',
-    generatePoints
-  )
+  f1.addBinding(params, 'radius', { min: 50, max: 500, step: 1 }).on('change', generatePoints)
+  f1.addBinding(params, 'latSteps', { min: 10, max: 200, step: 1 }).on('change', generatePoints)
+  f1.addBinding(params, 'lonSteps', { min: 10, max: 200, step: 1 }).on('change', generatePoints)
 
   const f2 = pane.addFolder({ title: 'Projection' })
   f2.addBinding(params, 'fov', { min: 100, max: 2000, step: 10 })
