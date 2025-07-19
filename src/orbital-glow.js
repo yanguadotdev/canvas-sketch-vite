@@ -19,6 +19,7 @@ const params = {
   nearColor: '#00ffff',
   rotationAxis: 'y', // 'x' or 'y'
   renderMode: 'points', // 'points' or 'grid'
+  easing: .1
 }
 
 let points = []
@@ -112,8 +113,8 @@ const sketch = () => {
         }
 
         // Smooth interpolation toward final position (easing)
-        p.screenX += (finalX - p.screenX) * 0.1
-        p.screenY += (finalY - p.screenY) * 0.1
+        p.screenX += (finalX - p.screenX) * params.easing
+        p.screenY += (finalY - p.screenY) * params.easing
 
         // Render point
         if (params.renderMode === 'points') {
@@ -224,6 +225,7 @@ const createPane = () => {
   const f3 = pane.addFolder({ title: 'Mouse Repulsion' })
   f3.addBinding(params, 'mouseRadius', { min: 0, max: 300, step: 1 })
   f3.addBinding(params, 'force', { min: 0, max: 200, step: 1 })
+  f3.addBinding(params, 'easing', { min: 0.01, max: 1, step: 0.01 })
 
   const f4 = pane.addFolder({ title: 'Colors' })
   f4.addBinding(params, 'baseColor', { label: 'Far Color' })
