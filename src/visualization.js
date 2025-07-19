@@ -80,7 +80,7 @@ function drawCircle(ctx, x, y, size, typeCircle, startAngleDeg = 0) {
 function paintFlag(ctx, point, width, height, flagConfig) {
   const { type, colors } = flagConfig
   const numBands = colors.length
-  ctx.strokeStyle = '#ffffff' // fallback
+  ctx.strokeStyle = 'transparent' // fallback
   const { startX, startY } = getStartPositions(width, height)
 
   if (type === 'horizontal') {
