@@ -71,6 +71,22 @@ function drawCircle(ctx, x, y, size, typeCircle, startAngleDeg = 0) {
   ctx.stroke()
 }
 
+function paintFlag(ctx, point, width, height, flagConfig) {
+  const { type, colors } = flagConfig
+  const numBands = colors.length
+  ctx.strokeStyle = '#ffffff' // fallback
+
+  if (type === 'horizontal') {
+    const bandHeight = height / numBands
+    const bandIndex = Math.floor(point.y0 / bandHeight)
+    ctx.strokeStyle = colors[bandIndex]
+  } else if (type === 'vertical') {
+    const bandWidth = width / numBands
+    const bandIndex = Math.floor(point.x0 / bandWidth)
+    ctx.strokeStyle = colors[bandIndex]
+  }
+}
+
 function paintByQuadrant(
   ctx,
   topLeft,
@@ -116,6 +132,8 @@ const params = {
     bottomLeft: '#ffbe0b',
     bottomRight: '#3a86ff',
   },
+  drawFlags: false,
+  selectedFlag: 'Peru',
 }
 
 let mouse = { x: -9999, y: -9999 }
@@ -146,7 +164,9 @@ const sketch = () => {
     const centerY = height / 2
 
     for (const p of points) {
-      if (params.paintByQuadrant) {
+      if (params.drawFlags) {
+        paintFlag(context, p, width, height, FLAGS[params.selectedFlag])
+      } else if (params.paintByQuadrant) {
         paintByQuadrant(
           context,
           params.colorsByQuadrant.topLeft,
@@ -220,6 +240,25 @@ const sketch = () => {
 }
 
 canvasSketch(sketch, settings)
+
+const FLAGS = {
+  Peru: {
+    type: 'vertical',
+    colors: ['#d91023', '#ffffff', '#d91023'],
+  },
+  France: {
+    type: 'vertical',
+    colors: ['#0055a4', '#ffffff', '#ef4135'],
+  },
+  Germany: {
+    type: 'horizontal',
+    colors: ['#000000', '#dd0000', '#ffce00'],
+  },
+  Italy: {
+    type: 'vertical',
+    colors: ['#009246', '#ffffff', '#ce2b37'],
+  },
+}
 
 function createPane() {
   const pane = new Pane({ title: 'Parameters' })
@@ -301,6 +340,30 @@ function createPane() {
   fInterpolation.addBinding(params, 'interpolation', {
     options: FUNCTIONS_INTERPOLATION,
     label: 'function',
+  })
+
+  const fFlags = pane.addFolder({ title: 'Flags' })
+  fFlags
+    .addBinding(params, 'drawFlags', { label: 'Draw Flag' })
+    .on('change', (ev) => {
+      params.paintByQuadrant = false
+      fAppearance.refresh()
+      fFlagsControls.hidden = !ev.value
+    })
+
+  const fFlagsControls = fFlags.addFolder({
+    title: 'Flag Options',
+    hidden: !params.drawFlags,
+  })
+
+  const flagNames = Object.keys(FLAGS).reduce((acc, key) => {
+    acc[key] = key
+    return acc
+  }, {})
+
+  fFlagsControls.addBinding(params, 'selectedFlag', {
+    options: flagNames,
+    label: 'Country',
   })
 }
 
